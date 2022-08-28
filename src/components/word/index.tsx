@@ -12,6 +12,11 @@ const domains = new Set(["http://localhost:3000"]);
 const Word = () => {
   let container!: DocumentEditorContainerComponent;
 
+  // const loadSampleData = (data: string) => {
+  //   console.log("main app json", JSON.parse(data));
+  //   container.documentEditor.open(JSON.parse(data));
+  // };
+
   useEffect(() => {
     window.onbeforeunload = function () {
       return "تغییرات شما ذخیره شود؟";
@@ -36,23 +41,27 @@ const Word = () => {
   const readEditorData = async (event: MessageEvent) => {
     if (!domains.has(event.origin)) return;
     const { action, key, value } = event.data;
+    console.log(event.data);
 
     const exportedDocument = await container.documentEditor.saveAsBlob("Sfdt");
     const reader = new FileReader();
     reader.onload = () => {
-      if (action !== IframeAction.LOAD) {
-        event.source!.postMessage(
-          {
-            action,
-            key,
-            value: JSON.stringify(reader.result),
-          },
-          "*"
-        );
-        localStorage.setItem(key, JSON.stringify(reader.result));
-      } else {
-        // should load server data here
-        console.log("value from main app", value);
+      switch (action) {
+        case IframeAction.SAVE:
+          event.source!.postMessage(
+            {
+              action,
+              key,
+              value: JSON.stringify(reader.result),
+            },
+            "*"
+          );
+          localStorage.setItem(key, JSON.stringify(reader.result));
+          break;
+        case IframeAction.LOAD:
+          debugger;
+          console.log("main app", value);
+          break;
       }
     };
 
