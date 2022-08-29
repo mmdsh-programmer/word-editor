@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import {
   DocumentEditorContainerComponent,
   Toolbar,
@@ -11,11 +11,6 @@ const domains = new Set(["http://localhost:3000"]);
 
 const Word = () => {
   let container!: DocumentEditorContainerComponent;
-
-  // const loadSampleData = (data: string) => {
-  //   console.log("main app json", JSON.parse(data));
-  //   container.documentEditor.open(JSON.parse(data));
-  // };
 
   useEffect(() => {
     window.onbeforeunload = function () {
@@ -41,13 +36,13 @@ const Word = () => {
   const readEditorData = async (event: MessageEvent) => {
     if (!domains.has(event.origin)) return;
     const { action, key, value } = event.data;
-    console.log(event.data);
 
     const exportedDocument = await container.documentEditor.saveAsBlob("Sfdt");
     const reader = new FileReader();
     reader.onload = () => {
       switch (action) {
         case IframeAction.SAVE:
+        case IframeAction.FREE_DRAFT:
           event.source!.postMessage(
             {
               action,
@@ -59,8 +54,7 @@ const Word = () => {
           localStorage.setItem(key, JSON.stringify(reader.result));
           break;
         case IframeAction.LOAD:
-          debugger;
-          console.log("main app", value);
+          container.documentEditor.open(JSON.parse(value));
           break;
       }
     };
