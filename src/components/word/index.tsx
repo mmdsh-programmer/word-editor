@@ -4,13 +4,13 @@ import {
   Toolbar,
 } from "@syncfusion/ej2-react-documenteditor";
 import TitleBar from "./titleBar";
-import { IframeAction } from "../../interface/enum";
+import { IframeAction, IframeMode } from "../../interface/enum";
 
 DocumentEditorContainerComponent.Inject(Toolbar);
 const domains = new Set(["http://localhost:3000"]);
 
 const Word = () => {
-  let container!: DocumentEditorContainerComponent;
+  let container: DocumentEditorContainerComponent;
 
   useEffect(() => {
     window.onbeforeunload = function () {
@@ -18,8 +18,38 @@ const Word = () => {
     };
 
     container.documentEditor.pageOutline = "#E0E0E0";
-    container.documentEditor.acceptTab = true;
     container.documentEditor.resize();
+    container.toolbarItems = [
+      "New",
+      "Open",
+      "Separator",
+      "Undo",
+      "Redo",
+      "Separator",
+      "Image",
+      "Table",
+      "Hyperlink",
+      "Bookmark",
+      "TableOfContents",
+      "Separator",
+      "Header",
+      "Footer",
+      "PageSetup",
+      "PageNumber",
+      "Break",
+      "InsertFootnote",
+      "InsertEndnote",
+      "Separator",
+      "Find",
+      "Separator",
+      "Comments",
+      "TrackChanges",
+      "LocalClipboard",
+      "Separator",
+      "FormFields",
+      "UpdateFields",
+    ];
+
     new TitleBar(
       document.getElementById("documenteditor_titlebar"),
       container.documentEditor,
@@ -36,6 +66,12 @@ const Word = () => {
   const readEditorData = async (event: MessageEvent) => {
     if (!domains.has(event.origin)) return;
     const { action, key, value } = event.data;
+    console.log("iframe says: ", event.data);
+
+    if (action === IframeMode.PREVIEW) {
+      container.documentEditor.isReadOnly = value;
+      container.showPropertiesPane = !value;
+    }
 
     const exportedDocument = await container.documentEditor.saveAsBlob("Sfdt");
     const reader = new FileReader();
@@ -47,19 +83,21 @@ const Word = () => {
             {
               action,
               key,
-              value: JSON.stringify(reader.result),
+              value: decodeURIComponent(JSON.stringify(reader.result)),
             },
             "*"
           );
           localStorage.setItem(key, JSON.stringify(reader.result));
           break;
         case IframeAction.LOAD:
-          container.documentEditor.open(JSON.parse(value));
+          if (value) {
+            container.documentEditor.open(JSON.parse(value));
+          }
           break;
       }
     };
 
-    reader.readAsText(exportedDocument, "ISO-8859-1");
+    reader.readAsText(exportedDocument);
   };
 
   return (
@@ -74,7 +112,6 @@ const Word = () => {
             }}
             style={{ display: "block" }}
             height={"100%"}
-            enableToolbar={true}
             locale="en-US"
           />
         </div>

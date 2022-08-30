@@ -3,3 +3,8 @@ export enum IframeAction {
   FREE_DRAFT = "free-draft",
   LOAD = "load"
 }
+
+export enum IframeMode {
+  EDIT = "edit",
+  PREVIEW = "preview",
+}
